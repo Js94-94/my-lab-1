@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>自动化小玩意清单 · 装备 + 项目库</title>
+<style>
+  *{box-sizing:border-box}
+  :root{
+    --bg:#0a0e13; --panel:#121a24; --panel2:#0e151d; --line:#24323f;
+    --text:#e6edf3; --dim:#8fa0ae; --acc:#7ee787; --cyan:#79c0ff;
+    --warn:#f2cc60; --pink:#ff9492; --violet:#d2a8ff;
+  }
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; color:var(--text); line-height:1.7;
+    background:radial-gradient(1100px 560px at 15% -10%,#16222e 0%,#0a0e13 58%) fixed;
+    font-family:"Segoe UI","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  }
+  .wrap{max-width:1040px; margin:0 auto; padding:36px 20px 90px}
+  header{padding:14px 0 10px; border-bottom:1px solid var(--line); margin-bottom:26px}
+  .kicker{color:var(--acc); font-size:13px; letter-spacing:.18em; text-transform:uppercase}
+  h1{margin:8px 0 6px; font-size:clamp(26px,4.4vw,40px); line-height:1.2}
+  h1 em{font-style:normal; color:var(--acc)}
+  .sub{color:var(--dim); max-width:720px}
+  .badges{display:flex; flex-wrap:wrap; gap:8px; margin-top:16px}
+  .badge{border:1px solid var(--line); background:var(--panel); border-radius:999px;
+    padding:4px 12px; font-size:13px; color:var(--dim)}
+  .badge b{color:var(--text); font-weight:600}
+  section{margin:44px 0}
+  h2{font-size:clamp(20px,2.6vw,26px); margin:0 0 6px; display:flex; align-items:center; gap:10px}
+  h2 .n{font-size:13px; color:var(--acc); border:1px solid var(--line); border-radius:8px;
+    padding:1px 8px; font-family:ui-monospace,Consolas,monospace}
+  .lead{color:var(--dim); margin:0 0 18px; max-width:780px}
+  code{font-family:ui-monospace,Consolas,"Courier New",monospace; font-size:.92em;
+    background:#1a2430; border:1px solid #263442; border-radius:6px; padding:1px 6px}
+  .hl{color:var(--warn)}
+
+  /* BOM */
+  .bom{background:var(--panel); border:1px solid var(--line); border-radius:16px; overflow:hidden}
+  .bom-head{display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between;
+    padding:14px 18px; background:#0f1720; border-bottom:1px solid var(--line)}
+  .bom-head .sum{font-family:ui-monospace,Consolas,monospace; color:var(--acc); font-size:15px}
+  .bom-head .sum b{font-size:19px}
+  .tier{border-top:1px solid var(--line)}
+  .tier:first-of-type{border-top:0}
+  .tier-h{display:flex; justify-content:space-between; gap:10px; padding:12px 18px 8px;
+    color:var(--dim); font-size:13px; letter-spacing:.04em}
+  .tier-h b{color:var(--text); font-size:14px}
+  .row{display:flex; gap:10px; align-items:flex-start; padding:10px 18px; border-top:1px dashed #1b2733; cursor:pointer}
+  .row:hover{background:#0f1720}
+  .row input{margin-top:5px; accent-color:#7ee787; width:16px; height:16px; flex:0 0 auto}
+  .row .nm{font-weight:600; font-size:14.5px; flex:0 0 auto}
+  .row .nt{color:var(--dim); font-size:13px; flex:1; min-width:120px}
+  .row .pr{font-family:ui-monospace,Consolas,monospace; color:var(--acc); font-size:13px; white-space:nowrap}
+  .row .pr.free{color:#8fa0ae}
+  .tip{color:var(--dim); font-size:13px; padding:10px 18px 14px}
+
+  /* chips */
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin:0 0 18px}
+  .chip{cursor:pointer; border:1px solid var(--line); background:var(--panel2); color:var(--dim);
+    border-radius:999px; padding:5px 14px; font-size:13px; transition:.15s}
+  .chip:hover{color:var(--text); border-color:#33475c}
+  .chip.on{background:var(--acc); color:#08130a; border-color:var(--acc); font-weight:600}
+
+  /* projects */
+  .plays{display:grid; gap:14px; grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+  .play{background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:16px; display:flex; flex-direction:column; gap:8px}
+  .play.hide{display:none}
+  .play.star{border-color:#2f5136; box-shadow:0 0 0 1px #2f5136 inset}
+  .phead{display:flex; justify-content:space-between; align-items:baseline; gap:8px}
+  .phead h3{margin:0; font-size:16px}
+  .phead .cost{font-family:ui-monospace,Consolas,monospace; font-size:12.5px; color:var(--acc); white-space:nowrap}
+  .play .why{font-size:13.5px; color:#c8d3de; margin:0}
+  .play .sk{font-size:12.5px; color:var(--dim); margin:0}
+  .play .pit{font-size:12.5px; color:var(--warn); margin:0}
+  .meta{display:flex; flex-wrap:wrap; gap:6px; margin-top:auto; padding-top:6px}
+  .tag{font-size:11.5px; border-radius:6px; padding:2px 8px; border:1px solid var(--line); color:var(--dim)}
+  .tag.cat{color:#79c0ff; border-color:#24455f}
+  .tag.star{color:#7ee787; border-color:#2f5136}
+  .lvl{margin-left:auto; font-size:12px; color:var(--warn); letter-spacing:1px}
+
+  /* formula / generator */
+  .grid2{display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px}
+  .card h3{margin:0 0 8px; font-size:16px}
+  .card p{margin:0; color:var(--dim); font-size:14px}
+  .card ol{margin:8px 0 0; padding-left:20px; color:var(--dim); font-size:14px}
+  .card li{margin:7px 0}
+  .card li b{color:var(--text)}
+  .gen{margin-top:14px; display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+  button.btn{background:var(--acc); color:#08130a; border:0; border-radius:10px; padding:10px 18px;
+    font-size:14.5px; font-weight:700; cursor:pointer; font-family:inherit}
+  button.btn.ghost{background:transparent; color:var(--text); border:1px solid var(--line)}
+  button.btn:active{transform:translateY(1px)}
+  .out{margin-top:14px; background:#0b1219; border:1px dashed #2c3d4e; border-radius:12px;
+    padding:16px; font-size:15px; min-height:56px; color:#c8d3de}
+  .out b{color:var(--acc)}
+
+  table{width:100%; border-collapse:collapse; font-size:14px; margin-top:8px}
+  th,td{text-align:left; padding:9px 10px; border-bottom:1px solid var(--line); vertical-align:top}
+  th{color:var(--dim); font-weight:600; font-size:13px}
+  td:first-child{white-space:nowrap}
+  .advice{color:var(--acc)}
+
+  footer{margin-top:60px; padding-top:18px; border-top:1px solid var(--line); color:var(--dim); font-size:13px}
+  @media (max-width:560px){
+    .wrap{padding:22px 14px 70px}
+    .row{flex-wrap:wrap}
+    .row .nt{flex-basis:100%; padding-left:26px}
+    .row .pr{margin-left:26px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">ME → Automation · 大二课余</div>
+  <h1>装备清单 + <em>能改造生活的小玩意</em></h1>
+  <p class="sub">
+    按"机械设计制造及其自动化 → 自动化方向"排的：第一批 170 块就能玩两个月，
+    不需要一次买齐。项目按"能不能闭环、能不能讲故事"筛过——点一下盒子可以勾选，页面会帮你算总价（会记住）。
+  </p>
+  <div class="badges">
+    <span class="badge">专业 <b>机械设计制造及其自动化</b></span>
+    <span class="badge">方向 <b>自动化</b></span>
+    <span class="badge">首批预算 <b>约 ¥170</b></span>
+    <span class="badge">项目库 <b>22 个</b></span>
+  </div>
+</header>
+
+<!-- ============ 1 ============ -->
+<section>
+  <h2><span class="n">01</span>购买清单</h2>
+  <p class="lead">原则：先买"能出成果"的，不买"看起来有用"的。价格是淘宝大致区间，会波动。</p>
+  <div class="bom" id="bom">
+    <div class="bom-head">
+      <div>
+        <div class="sum">已选 <b id="cnt">0</b> 件 · 合计 <b id="total">¥0</b></div>
+        <div style="font-size:12.5px;color:#8fa0ae">勾选的会存在这台电脑的浏览器里</div>
+      </div>
+      <button class="btn ghost" id="resetBom" style="padding:7px 14px;font-size:13px">清空</button>
+    </div>
+    <div id="tiers"></div>
+    <div class="tip">💡 只买第一批也能把下面 1～8 号项目全做一遍；第二批等你想做"会动、会走"的东西再加。</div>
+  </div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section>
+  <h2><span class="n">02</span>板子怎么选</h2>
+  <p class="lead">别听人忽悠"必须从 51 学起"。课程要求什么就学什么，课外用能最快出成果的。</p>
+  <div class="card">
+    <table>
+      <thead><tr><th>板子</th><th>价格</th><th>适合</th><th>优点</th><th>缺点</th></tr></thead>
+      <tbody>
+        <tr><td><b>ESP32</b></td><td>≈¥25</td><td class="advice">首选 · 课外主力</td><td>WiFi/蓝牙、双核、资料多、能直接做手机网页</td><td>ADC 一般、硬实时性一般</td></tr>
+        <tr><td>Arduino Uno</td><td>≈¥30</td><td>传感器生态、教学</td><td>插上就能用、例程最多</td><td>性能弱、同价位不如 ESP32</td></tr>
+        <tr><td>STM32F103</td><td>≈¥25</td><td class="advice">就业主力 · 课程同步再上</td><td>工业岗位最常见、寄存器/HAL 都值得学</td><td>入门门槛高，容易"点灯三天"</td></tr>
+        <tr><td>51 单片机</td><td>≈¥15</td><td>课程要求</td><td>便宜、结构简单</td><td>过时，课外别专门买</td></tr>
+        <tr><td>树莓派</td><td>≈¥200+</td><td>视觉 / Linux 上位机</td><td>能跑 OpenCV、Python</td><td>贵，现在用旧手机 + 电脑就够</td></tr>
+        <tr><td>PLC（S7-1200）</td><td>二手 ¥400+</td><td>自动化核心</td><td>工业真实、就业硬通货</td><td>贵；先用 TIA Portal 试用版 + PLCSIM 仿真练</td></tr>
+      </tbody>
+    </table>
+    <p class="lead" style="margin:14px 0 0">
+      打样别花钱：<b>嘉立创</b> PCB 5 元 5 片、<b>立创 EDA</b> 免费；3D 打印和激光切割先去学校创客空间，基本免费。
+    </p>
+  </div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section>
+  <h2><span class="n">03</span>项目库：22 个能改造生活的小玩意</h2>
+  <p class="lead">
+    每张卡都标了<b>难度、成本、周期、核心技能</b>，还有<b>最容易翻车的地方</b>。
+    带 <span style="color:#7ee787">★</span> 的是我最看好的——机械和电控都能讲，作品集里最扛打。
+  </p>
+  <div class="chips" id="chips"></div>
+  <div class="plays" id="plays"></div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section>
+  <h2><span class="n">04</span>发明公式：从"想做点什么"到"具体做什么"</h2>
+  <p class="lead">大部分好点子都能用这五个套路套出来。卡壳的时候就翻回去看。</p>
+  <div class="grid2">
+    <div class="card">
+      <h3>① 感知 → 决策 → 执行</h3>
+      <p>任何自动化装置都只有这三段。先写清楚这三句话，再想硬件怎么填：<br>
+      "我感知什么状态 → 按什么规则判断 → 用什么执行器动作"。</p>
+    </div>
+    <div class="card">
+      <h3>② 替换法</h3>
+      <p>找一个你每天重复的手动动作——关灯、拉窗帘、按键盘、浇水——把"手"换成舵机 / 电机 / 水泵 / 继电器。这是最容易出成果的路。</p>
+    </div>
+    <div class="card">
+      <h3>③ 加感法</h3>
+      <p>给已有物件装一只"眼睛"：门、灯、花盆、垃圾桶、书架、衣架。它会知道自己现在的状态，于是就有了自动化的前提。</p>
+    </div>
+    <div class="card">
+      <h3>④ 闭环法</h3>
+      <p>开环做完就加反馈：限位开关、编码器、摄像头、电流检测。加了反馈，机器才"知道自己做成了没有"——这正好是自动控制原理那门课的核心。</p>
+    </div>
+    <div class="card">
+      <h3>⑤ 拆解对标</h3>
+      <p>捡一个便宜小家电（旧计算器、旧打印机、坏鼠标）拆开，看别人的机构和控制怎么解决同一个问题。对机械专业来说，这是最划算的学习方式。</p>
+    </div>
+    <div class="card">
+      <h3>灵感枯竭时，摇一摇</h3>
+      <p>随机组合"感知 + 执行 + 场景"，不保证靠谱，但保证不无聊。</p>
+      <div class="gen">
+        <button class="btn" id="genBtn">开个脑洞</button>
+        <button class="btn ghost" id="genSave">再来一个</button>
+      </div>
+      <div class="out" id="genOut">点一下左边，看看能摇出什么。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section>
+  <h2><span class="n">05</span>时间、课程、竞赛怎么排</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3>每周只投 2～3 小时</h3>
+      <ol>
+        <li><b>固定时段</b>：比如周日下午，雷打不动。碎片时间只用来查资料。</li>
+        <li><b>一个里程碑一个周末</b>：做不完就砍功能，别让项目烂尾——烂尾最伤热情。</li>
+        <li><b>每学期 1 个能录视频的作品</b> + 1 个能写进简历的系统，够了。</li>
+        <li><b>先跑通再优化</b>：能演示的丑东西 &gt; 永远在调试的完美方案。</li>
+      </ol>
+    </div>
+    <div class="card">
+      <h3>和课程、竞赛挂钩</h3>
+      <ol>
+        <li><b>课程对应</b>：单片机 → P1；传感器 → 感知类项目；自动控制原理 → PID 调速/温控；电机拖动 → 步进/直流电机项目；PLC → 传送带分拣。</li>
+        <li><b>课设直接复用</b>：机械原理/机械设计课设的结构件，可以拿来做项目的外壳和机构。</li>
+        <li><b>竞赛</b>：电子设计竞赛、机械创新设计大赛、工程训练综合能力竞赛、中国智能制造挑战赛、挑战杯。大二开始攒，别等大三。</li>
+        <li><b>实验室</b>：找老师/学长进实验室，工具、器件、指导全有了——这是性价比最高的一步。</li>
+      </ol>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <h3>作品集怎么留证据</h3>
+    <p>每个项目留四样东西：<b>演示视频</b>（30 秒，能跑就行）、<b>接线/结构照片</b>、<b>BOM 清单</b>、<b>踩坑记录</b>（面试时最值钱的部分）。
+    放 GitHub 或一个网盘文件夹，半年后你会谢谢自己。</p>
+  </div>
+</section>
+
+<footer>
+  自动化小玩意清单 · 单文件离线页，勾选状态存在本机浏览器里。<br>
+  价格是 2025—2026 年淘宝大致区间，以实际为准；学校能借的优先借，闲鱼能淘的优先淘。
+</footer>
+
+</div>
+
+<script>
+/* ================= 购买清单 ================= */
+const BOM = [
+  {tier:'第一批 · 入门必备（约 ¥170，够玩两个月）', items:[
+    {id:'esp32',  n:'ESP32 开发板 ×2', p:50, note:'一块做项目、一块备用。WiFi/蓝牙都有，出成果最快'},
+    {id:'bb',     n:'面包板 830 孔 + 杜邦线一套', p:20, note:'公对公、公对母都买，接线不焊也能跑'},
+    {id:'sg90',   n:'SG90 舵机 ×4', p:30, note:'按计算器、拨开关、做小机构都靠它，便宜到可以烧'},
+    {id:'sensor', n:'传感器入门包', p:30, note:'DHT11、光敏、超声波、红外人体、按键、LED、蜂鸣器'},
+    {id:'la',     n:'USB 逻辑分析仪（8 通道）', p:20, note:'调试串口/I2C/矩阵扫描的神器，比示波器便宜太多'},
+    {id:'pwr',    n:'5V 2A 电源 + DC 转接头', p:20, note:'舵机一起动就抢电，别用电脑 USB 硬扛'}
+  ]},
+  {tier:'第二批 · 会动、会走（约 ¥160，按项目加）', items:[
+    {id:'mg996',  n:'MG996R 舵机 ×2', p:50, note:'大扭矩，结构件和机械臂用；SG90 带不动的时候再买'},
+    {id:'stepper',n:'42 步进电机 + A4988/DRV8825 + 12V 电源', p:70, note:'自动化必玩：定位、调速、细分；数控/绘图仪的基础'},
+    {id:'relay',  n:'继电器模块 2 路', p:10, note:'控 220V 的灯、风扇、水泵，注意安全'},
+    {id:'oled',   n:'0.96 寸 OLED（I2C）', p:15, note:'给项目一个"小屏幕"，比只闪 LED 高级得多'},
+    {id:'driver', n:'L298N 或 TB6612 电机驱动', p:15, note:'直流电机正反转、PWM 调速'}
+  ]},
+  {tier:'第三批 · 工具与结构（约 ¥190）', items:[
+    {id:'dmm',    n:'万用表', p:30, note:'学校/实验室有就先借；没有的话这个优先级很高'},
+    {id:'iron',   n:'烙铁套装（焊锡、助焊剂、吸锡带）', p:40, note:'飞线、改板必备；学校创客空间通常也有'},
+    {id:'tools',  n:'精密螺丝刀 + 尖嘴钳 + 斜口钳 + 剥线钳', p:50, note:'拆东西才是机械人的浪漫'},
+    {id:'glue',   n:'热熔胶枪 + 胶棒', p:20, note:'快速固定、做临时结构件'},
+    {id:'struct', n:'铝型材 / 亚克力板 / 轴承 / 同步带', p:50, note:'做机构用；3D 打印和激光切割先去学校，基本免费'}
+  ]},
+  {tier:'第四批 · 视觉（可选，约 ¥65）', items:[
+    {id:'cam',    n:'USB 摄像头', p:40, note:'做视觉读屏；先用旧手机当 IP 摄像头也行（0 元）'},
+    {id:'cam32',  n:'ESP32-CAM', p:25, note:'便宜但画质一般，做简单识别够用'}
+  ]},
+  {tier:'先别买（省下来的钱买上面）', items:[
+    {id:'no51',   n:'51 单片机学习板', p:0, note:'课程要求再买，课外别专门囤'},
+    {id:'no32',   n:'STM32 大礼包', p:0, note:'等单片机课开了再上，现在买了只会吃灰'},
+    {id:'nopi',   n:'树莓派', p:0, note:'贵，现阶段旧手机 + 电脑完全够'},
+    {id:'nokit',  n:'各种"XX 大礼包"', p:0, note:'80% 的模块你一辈子用不到，按项目单买'}
+  ]}
+];
+
+const tiersEl = document.getElementById('tiers');
+const KEY = 'auto-lab-bom-v1';
+let checked = {};
+try { checked = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch(e){ checked = {}; }
+
+BOM.forEach(group=>{
+  const div = document.createElement('div');
+  div.className = 'tier';
+  const h = document.createElement('div');
+  h.className = 'tier-h';
+  h.innerHTML = '<b>' + group.tier + '</b>';
+  div.appendChild(h);
+  group.items.forEach(it=>{
+    const row = document.createElement('label');
+    row.className = 'row';
+    const priceCls = it.p > 0 ? 'pr' : 'pr free';
+    const priceTxt = it.p > 0 ? '¥' + it.p : '学校/二手';
+    row.innerHTML = `<input type="checkbox" data-id="${it.id}" data-p="${it.p}" ${checked[it.id] ? 'checked' : ''}>
+      <span class="nm">${it.n}</span><span class="nt">${it.note}</span><span class="${priceCls}">${priceTxt}</span>`;
+    div.appendChild(row);
+  });
+  tiersEl.appendChild(div);
+});
+
+function refreshTotal(){
+  let sum = 0, cnt = 0;
+  document.querySelectorAll('#tiers input[type=checkbox]').forEach(cb=>{
+    if(cb.checked){
+      cnt++;
+      sum += parseFloat(cb.dataset.p) || 0;
+    }
+  });
+  document.getElementById('cnt').textContent = cnt;
+  document.getElementById('total').textContent = '¥' + sum;
+  checked = {};
+  document.querySelectorAll('#tiers input[type=checkbox]').forEach(cb=>{
+    if(cb.checked) checked[cb.dataset.id] = true;
+  });
+  try { localStorage.setItem(KEY, JSON.stringify(checked)); } catch(e){}
+}
+
+document.querySelectorAll('#tiers input[type=checkbox]').forEach(cb=>{
+  cb.addEventListener('change', refreshTotal);
+});
+document.getElementById('resetBom').onclick = ()=>{
+  document.querySelectorAll('#tiers input[type=checkbox]').forEach(cb=>cb.checked = false);
+  refreshTotal();
+};
+refreshTotal();
+
+/* ================= 项目库 ================= */
+const PLAYS = [
+  {t:'人走灯灭', cat:'宿舍生活', cost:'¥30', time:'1 晚', lv:1, star:false,
+   sk:'红外人体 · 继电器 · 逻辑判断',
+   why:'最小闭环：感知到人不在 → 断电。自动化的"Hello World"。',
+   pit:'宿舍限电和走线先跟室友商量，继电器控 220V 务必断电操作。'},
+  {t:'自动开合垃圾桶', cat:'宿舍生活', cost:'¥45', time:'1 周末', lv:1, star:false,
+   sk:'超声波 · 舵机 · 状态机',
+   why:'经典的"感知-执行"入门，手一挥盖就开，室友会玩半天。',
+   pit:'舵机扭矩要够，盖子铰链用热熔胶固定容易松。'},
+  {t:'桌面专注助手', cat:'宿舍生活', cost:'¥50', time:'1 周末', lv:1, star:false,
+   sk:'定时器 · 灯带 · 按键 · OLED',
+   why:'番茄钟 + 久坐提醒 + 环境光提示，自己天天用，改起来也顺手。',
+   pit:'功能别贪多，第一版只做"25 分钟亮灯 + 按键暂停"。'},
+  {t:'自动浇花', cat:'宿舍生活', cost:'¥45', time:'1 周末', lv:1, star:false,
+   sk:'土壤湿度 · 水泵 · 阈值控制',
+   why:'阈值控制就是最原始的闭环，顺便理解"死区"和"回差"为什么存在。',
+   pit:'水别对着电路板；水泵要独立供电，别从单片机取电。'},
+  {t:'温湿度记录仪 + 手机网页', cat:'宿舍生活', cost:'¥35', time:'1 晚', lv:1, star:false,
+   sk:'DHT22 · WiFi · HTTP · 图表',
+   why:'ESP32 的第一个标准项目：手机浏览器打开就能看宿舍温湿度曲线。',
+   pit:'先跑通网页再想省电；DHT 采样间隔别小于 2 秒。'},
+  {t:'门窗防忘关提醒', cat:'宿舍生活', cost:'¥30', time:'1 晚', lv:1, star:false,
+   sk:'磁簧开关 · 低功耗 · 消息推送',
+   why:'超低成本、真能解决痛点，还能顺手学低功耗唤醒。',
+   pit:'推送需要服务器或第三方接口，第一版先做蜂鸣器提醒。'},
+  {t:'雨滴感应自动收衣架', cat:'宿舍生活', cost:'¥60', time:'2 周末', lv:2, star:true,
+   sk:'雨滴传感器 · 直流电机 · 限位开关 · 机构',
+   why:'机械 + 电控都能讲：下雨自动收、限位开关做闭环，家里真的能用。',
+   pit:'机构别做太复杂；先用纸板验证行程，再上铝型材。'},
+  {t:'追光台灯', cat:'宿舍生活', cost:'¥40', time:'1 周末', lv:2, star:false,
+   sk:'光敏电阻 · 舵机 · 比较逻辑',
+   why:'两路光敏做差动，舵机把灯转向亮的一边——双轴追光云台的前置练习。',
+   pit:'白炽灯/台灯直射会饱和，加个遮光筒或降低采样频率。'},
+
+  {t:'双轴追光云台', cat:'机械运动', cost:'¥50', time:'2 周末', lv:2, star:true,
+   sk:'双光敏 · 双舵机 · 差动控制 · 支架',
+   why:'太阳能追光的微缩版：机构设计是你的强项，控制逻辑又正好练手。',
+   pit:'两个自由度会互相耦合，先调单轴再上双轴。'},
+  {t:'人脸跟随云台', cat:'机械运动', cost:'¥120', time:'3 周末', lv:3, star:true,
+   sk:'摄像头 · OpenCV · PID · 串口通信',
+   why:'视觉伺服的入门形态：摄像头找到人脸 → PID 算偏差 → 舵机转过去。',
+   pit:'先做"检测到就转"的开环，再加 PID；别一上来就上深度学习。'},
+  {t:'桌面传送带分拣', cat:'机械运动', cost:'¥150', time:'1 个月', lv:3, star:true,
+   sk:'直流电机 · 光电/颜色传感 · 舵机推杆 · 状态机',
+   why:'工业自动化的微缩版，也是自动化课设的标准题目，讲起来最像"专业"。',
+   pit:'传送带用纸板 + 皮筋先验证，速度别太快，传感器距离要可调。'},
+  {t:'三轴机械臂抓积木', cat:'机械运动', cost:'¥200', time:'1 个月+', lv:3, star:true,
+   sk:'舵机 · 逆运动学 · 视觉 · 抓取策略',
+   why:'机械 + 电控 + 算法的集大成，竞赛级作品，但别第一个就做它。',
+   pit:'先做两轴、只抓固定位置，跑通了再加第三轴和视觉。'},
+  {t:'步进绘图仪 / 写毛笔字', cat:'机械运动', cost:'¥150', time:'1 个月', lv:3, star:false,
+   sk:'步进电机 · 插补 · G 代码 · 机械结构',
+   why:'CNC 的入门形态：两轴插补画直线和圆，机械专业的浪漫。',
+   pit:'先画一个正方形，再谈圆弧；同步带张紧度直接影响精度。'},
+  {t:'自动翻页器', cat:'机械运动', cost:'¥50', time:'2 周末', lv:2, star:false,
+   sk:'舵机 · 连杆机构 · 结构设计',
+   why:'纯机械设计题：怎么用一个小舵机可靠地翻一页纸，很考验机构功力。',
+   pit:'纸的摩擦和厚度变化是最大变量，多打印几版支架试。'},
+  {t:'自动投喂器', cat:'机械运动', cost:'¥80', time:'2 周末', lv:2, star:false,
+   sk:'定时 · 舵机/螺旋 · 结构 · 电源管理',
+   why:'定时 + 定量，简单的"开环定时执行"，做好了能一直用。',
+   pit:'出料口容易卡，螺旋出料比翻板可靠；别忘了断电续存时间。'},
+
+  {t:'自行车码表 + 摔倒检测', cat:'感知测量', cost:'¥60', time:'2 周末', lv:2, star:false,
+   sk:'MPU6050 · 霍尔传感器 · 滤波 · 低功耗',
+   why:'传感器融合入门：加速度+陀螺仪判断姿态，比点灯有意思得多。',
+   pit:'颠簸会误触发摔倒，阈值和持续时间要一起调。'},
+  {t:'宿舍空气质量检测', cat:'感知测量', cost:'¥50', time:'1 周末', lv:1, star:false,
+   sk:'MQ 系列 · 校准 · OLED · 阈值报警',
+   why:'实用、便宜、室友都会问"现在多少"，顺便学传感器校准。',
+   pit:'MQ 传感器要预热，数值只能看趋势，别当精密仪器。'},
+  {t:'手势控制', cat:'感知测量', cost:'¥40', time:'2 周末', lv:2, star:false,
+   sk:'MPU6050 · 阈值/模板匹配 · 无线通信',
+   why:'手一挥切歌、翻 PPT，演示效果拉满，本质是模式识别的入门。',
+   pit:'先做 3 个手势就够了，动作要夸张、要慢。'},
+  {t:'智能水表/电表读数', cat:'感知测量', cost:'¥80', time:'3 周末', lv:3, star:false,
+   sk:'摄像头 · 七段/数字识别 · OCR',
+   why:'和你拆的那台计算器同源：读七段码。做完这个，你就真懂"视觉读屏"了。',
+   pit:'先固定安装位置和光照，识别率 90% 就够用，别追求 100%。'},
+
+  {t:'视觉引导按键机器人（你那台计算器）', cat:'硬核发明', cost:'¥80', time:'3 周末', lv:2, star:true,
+   sk:'摄像头 · 七段识别 · 舵机 · 闭环校验',
+   why:'用你拆过的 DD-5202 当"被控对象"：摄像头看屏 → 舵机按键 → 再读屏确认算对了。闭环的完美教具。',
+   pit:'先把计算器装回去；视觉部分先用旧手机拍，别一上来就买摄像头。'},
+  {t:'离线语音助手', cat:'硬核发明', cost:'¥70', time:'3 周末', lv:3, star:false,
+   sk:'离线语音模块 · 串口 · 命令词 · 继电器',
+   why:'"开灯""关风扇"——用现成语音模块，重点在把它接进你的设备。',
+   pit:'别一上来做自然语言，先做 10 个固定命令词。'},
+  {t:'自动盖章 / 自动按键器', cat:'硬核发明', cost:'¥60', time:'2 周末', lv:2, star:false,
+   sk:'舵机 · 连杆 · 压力控制 · 结构',
+   why:'最朴素的"自动化治懒"：找一个你每天要重复按的动作，交给机器。',
+   pit:'力度不够盖不清晰，力度太大压坏东西——加个弹簧缓冲。'}
+];
+
+const chipsEl = document.getElementById('chips');
+const playsEl = document.getElementById('plays');
+const CATS = ['全部','宿舍生活','机械运动','感知测量','硬核发明'];
+
+CATS.forEach((c,i)=>{
+  const b = document.createElement('button');
+  b.className = 'chip' + (i===0 ? ' on' : '');
+  b.textContent = c;
+  b.onclick = ()=>{
+    document.querySelectorAll('#chips .chip').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    document.querySelectorAll('.play').forEach(card=>{
+      card.classList.toggle('hide', c !== '全部' && card.dataset.cat !== c);
+    });
+  };
+  chipsEl.appendChild(b);
+});
+
+PLAYS.forEach(p=>{
+  const el = document.createElement('article');
+  el.className = 'play' + (p.star ? ' star' : '');
+  el.dataset.cat = p.cat;
+  const stars = '★'.repeat(p.lv) + '☆'.repeat(3 - p.lv);
+  el.innerHTML = `
+    <div class="phead"><h3>${p.t}</h3><span class="cost">${p.cost} · ${p.time}</span></div>
+    <p class="why">${p.why}</p>
+    <p class="sk">🔧 ${p.sk}</p>
+    <p class="pit">⚠️ ${p.pit}</p>
+    <div class="meta">
+      <span class="tag cat">${p.cat}</span>
+      ${p.star ? '<span class="tag star">★ 推荐</span>' : ''}
+      <span class="lvl">${stars}</span>
+    </div>`;
+  playsEl.appendChild(el);
+});
+
+/* ================= 点子生成器 ================= */
+const SENSE = ['人体红外','超声波','光敏电阻','温湿度','土壤湿度','霍尔/磁铁','陀螺仪','颜色传感器','声音','压力/称重','限位开关','摄像头'];
+const ACT = ['舵机','直流电机','步进电机','继电器','小水泵','电磁铁','蜂鸣器','灯带','风扇','加热片','显示屏'];
+const SCENE = ['宿舍','桌面','花盆','门窗','垃圾桶','衣架','书架','自行车','猫窝','快递盒','抽屉','床头'];
+
+function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+function gen(){
+  const s = pick(SENSE), a = pick(ACT), c = pick(SCENE);
+  return `用 <b>${s}</b> 感知 <b>${c}</b> 的状态，用 <b>${a}</b> 做出反应，再加上一个"做成了没有"的反馈（限位/电流/摄像头）——一个能讲清楚的小项目就成了。`;
+}
+let last = '';
+function genOnce(){
+  let txt = gen();
+  let guard = 0;
+  while(txt === last && guard++ < 5) txt = gen();
+  last = txt;
+  document.getElementById('genOut').innerHTML = txt;
+}
+document.getElementById('genBtn').onclick = genOnce;
+document.getElementById('genSave').onclick = genOnce;
+</script>
+<a href="index.html" style="position:fixed;left:16px;bottom:16px;z-index:9999;background:#121a24;border:1px solid #24323f;color:#7ee787;border-radius:999px;padding:7px 15px;font-size:13px;text-decoration:none;font-family:Segoe UI,Microsoft YaHei,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.4)">← 自动化小站</a>
+</body>
+</html>

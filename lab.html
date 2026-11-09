@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DD-5202 计算器实验室 · 5.89 元能玩出什么</title>
+<style>
+  *{box-sizing:border-box}
+  :root{
+    --bg:#0a0e13; --panel:#121a24; --panel2:#0e151d; --line:#24323f;
+    --text:#e6edf3; --dim:#8fa0ae; --acc:#7ee787; --cyan:#79c0ff;
+    --warn:#f2cc60; --pink:#ff9492; --violet:#d2a8ff;
+  }
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; color:var(--text); line-height:1.7;
+    background:radial-gradient(1100px 560px at 15% -10%,#16222e 0%,#0a0e13 58%) fixed;
+    font-family:"Segoe UI","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  }
+  .wrap{max-width:1000px; margin:0 auto; padding:36px 20px 90px}
+
+  /* ---------- header ---------- */
+  header{padding:14px 0 10px; border-bottom:1px solid var(--line); margin-bottom:26px}
+  .kicker{color:var(--acc); font-size:13px; letter-spacing:.18em; text-transform:uppercase}
+  h1{margin:8px 0 6px; font-size:clamp(26px,4.4vw,40px); line-height:1.2}
+  h1 em{font-style:normal; color:var(--acc)}
+  .sub{color:var(--dim); max-width:680px}
+  .badges{display:flex; flex-wrap:wrap; gap:8px; margin-top:16px}
+  .badge{border:1px solid var(--line); background:var(--panel); border-radius:999px;
+    padding:4px 12px; font-size:13px; color:var(--dim)}
+  .badge b{color:var(--text); font-weight:600}
+
+  /* ---------- sections ---------- */
+  section{margin:44px 0}
+  h2{font-size:clamp(20px,2.6vw,26px); margin:0 0 6px; display:flex; align-items:center; gap:10px}
+  h2 .n{font-size:13px; color:var(--acc); border:1px solid var(--line); border-radius:8px;
+    padding:1px 8px; font-family:ui-monospace,Consolas,monospace}
+  .lead{color:var(--dim); margin:0 0 18px; max-width:760px}
+
+  /* ---------- truth cards ---------- */
+  .grid3{display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px}
+  .card h3{margin:0 0 8px; font-size:16px}
+  .card p{margin:0; color:var(--dim); font-size:14.5px}
+  .card .ico{font-size:22px; display:block; margin-bottom:6px}
+  .card.hot{border-color:#3d2b2b; background:linear-gradient(180deg,#1b1214,#121a24)}
+
+  /* ---------- pipeline ---------- */
+  .flow{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:6px 0 18px}
+  .node{background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:10px 14px; font-size:14px; min-width:104px; text-align:center}
+  .node small{display:block; color:var(--dim); font-size:12px; margin-top:2px}
+  .node.acc{border-color:#2f5136; box-shadow:0 0 0 1px #2f5136 inset}
+  .arrow{color:var(--acc); font-size:18px}
+  .facts{margin:0; padding-left:20px; color:var(--dim); font-size:14.5px}
+  .facts li{margin:8px 0}
+  .facts b{color:var(--text)}
+  code{font-family:ui-monospace,Consolas,"Courier New",monospace; font-size:.92em;
+    background:#1a2430; border:1px solid #263442; border-radius:6px; padding:1px 6px}
+  .hl{color:var(--warn)}
+  .hl2{color:var(--cyan)}
+
+  /* ---------- chips / filter ---------- */
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin:0 0 18px}
+  .chip{cursor:pointer; border:1px solid var(--line); background:var(--panel2); color:var(--dim);
+    border-radius:999px; padding:5px 14px; font-size:13px; transition:.15s}
+  .chip:hover{color:var(--text); border-color:#33475c}
+  .chip.on{background:var(--acc); color:#08130a; border-color:var(--acc); font-weight:600}
+
+  /* ---------- plays ---------- */
+  .plays{display:grid; gap:14px; grid-template-columns:repeat(auto-fill,minmax(290px,1fr))}
+  .play{background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:16px 16px 14px; display:flex; flex-direction:column; gap:8px}
+  .play.hide{display:none}
+  .phead{display:flex; justify-content:space-between; align-items:baseline; gap:10px}
+  .phead h3{margin:0; font-size:16px}
+  .cost{font-family:ui-monospace,Consolas,monospace; font-size:12.5px; color:var(--acc); white-space:nowrap}
+  .play p{margin:0; font-size:14px; color:#c8d3de}
+  .play .tip{font-size:13px; color:var(--dim)}
+  .meta{display:flex; flex-wrap:wrap; gap:6px; margin-top:auto; padding-top:8px}
+  .tag{font-size:11.5px; border-radius:6px; padding:2px 8px; border:1px solid var(--line); color:var(--dim)}
+  .tag[data-tag="零成本"]{color:#7ee787; border-color:#2f5136}
+  .tag[data-tag="拆机"]{color:#f2cc60; border-color:#4d4322}
+  .tag[data-tag="焊接"]{color:#ff9492; border-color:#4d2b2b}
+  .tag[data-tag="软件"]{color:#79c0ff; border-color:#24455f}
+  .tag[data-tag="硬核"]{color:#d2a8ff; border-color:#3d2f52}
+  .time{font-size:11.5px; color:var(--dim); margin-left:auto}
+
+  /* ---------- tools ---------- */
+  .panel{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:20px}
+  .field{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:14px 0}
+  input[type=text]{
+    flex:1 1 220px; min-width:180px; background:var(--panel2); color:var(--text);
+    border:1px solid var(--line); border-radius:10px; padding:11px 13px; font-size:16px;
+    font-family:inherit; outline:none;
+  }
+  input[type=text]:focus{border-color:var(--acc)}
+  button.btn{
+    background:var(--acc); color:#08130a; border:0; border-radius:10px; padding:11px 20px;
+    font-size:15px; font-weight:700; cursor:pointer; font-family:inherit;
+  }
+  button.btn.ghost{background:transparent; color:var(--text); border:1px solid var(--line)}
+  button.btn:active{transform:translateY(1px)}
+  .out{margin-top:16px; background:#0b1219; border:1px dashed #2c3d4e; border-radius:12px; padding:16px}
+  .out .display{font-family:ui-monospace,Consolas,monospace; font-size:clamp(20px,4vw,30px);
+    letter-spacing:.12em; color:var(--acc); word-break:break-all}
+  .out .flip{color:var(--dim); font-size:13px; margin-top:6px}
+  .ex{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+  .ex button{background:var(--panel2); border:1px solid var(--line); color:var(--dim);
+    border-radius:8px; padding:5px 10px; font-size:12.5px; cursor:pointer; font-family:ui-monospace,Consolas,monospace}
+  .ex button:hover{color:var(--text); border-color:#33475c}
+  .maptable{display:grid; grid-template-columns:repeat(auto-fill,minmax(76px,1fr)); gap:6px; margin-top:14px}
+  .maptable span{background:var(--panel2); border:1px solid var(--line); border-radius:8px;
+    text-align:center; font-family:ui-monospace,Consolas,monospace; font-size:13px; padding:5px 0; color:var(--dim)}
+  .maptable b{color:var(--acc)}
+
+  /* ---------- detective ---------- */
+  .quiz{display:grid; gap:12px; grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+  fieldset{border:1px solid var(--line); border-radius:12px; background:var(--panel2); margin:0; padding:12px 14px}
+  legend{font-size:14px; font-weight:600; padding:0 6px}
+  legend code{font-size:13px}
+  .opt{display:flex; align-items:flex-start; gap:8px; font-size:13.5px; color:var(--dim); margin:7px 0; cursor:pointer}
+  .opt input{accent-color:#7ee787; margin-top:4px}
+
+  /* ---------- roadmap ---------- */
+  .route{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:20px; margin-bottom:14px}
+  .route h3{margin:0 0 4px; font-size:17px; display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+  .route .lv{font-size:11.5px; font-weight:400; color:var(--dim); border:1px solid var(--line); border-radius:6px; padding:1px 8px}
+  .route ol{margin:12px 0 0; padding-left:22px; color:#c8d3de; font-size:14.5px}
+  .route li{margin:8px 0}
+  .route .warn{margin-top:12px; font-size:13.5px; color:var(--warn); background:#1d1a0f; border:1px solid #3d361e; border-radius:10px; padding:10px 12px}
+  .route .note{font-size:13px; color:var(--dim); margin-top:12px}
+  pre{margin:12px 0 0; background:#0b1219; border:1px solid var(--line); border-radius:12px;
+    padding:14px; overflow:auto; font-size:12.5px; line-height:1.6}
+  pre code{background:none; border:0; padding:0; font-size:inherit; color:#c8d3de}
+
+  /* ---------- table ---------- */
+  table{width:100%; border-collapse:collapse; font-size:14px; margin-top:8px}
+  th,td{text-align:left; padding:9px 10px; border-bottom:1px solid var(--line)}
+  th{color:var(--dim); font-weight:600; font-size:13px}
+  td:last-child,th:last-child{text-align:right; white-space:nowrap; color:var(--dim); font-family:ui-monospace,Consolas,monospace}
+
+  .safety{background:#1b1214; border:1px solid #3d2b2b; border-radius:14px; padding:18px}
+  .safety h2{color:var(--pink)}
+  .safety ul{margin:8px 0 0; padding-left:20px; color:#e8c9c9; font-size:14px}
+  .safety li{margin:6px 0}
+  footer{margin-top:60px; padding-top:18px; border-top:1px solid var(--line); color:var(--dim); font-size:13px}
+  @media (max-width:560px){
+    .wrap{padding:22px 14px 70px}
+    .node{flex:1 1 44%; min-width:0}
+    .arrow{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">Calculator Lab · 无接口硬件的快乐</div>
+  <h1>你的计算器：<em>鼎邦 DD-5202</em><br>5.89 元，能玩出什么</h1>
+  <p class="sub">
+    它没有 USB、没有蓝牙、没有程序模式——但它把一台计算机的全部要素都压缩进了 5 块钱：
+    输入、运算、存储、显示、供电。想让它"连上电脑"，接口得自己造。
+  </p>
+  <div class="badges">
+    <span class="badge">机型 <b>鼎邦 DD-5202</b></span>
+    <span class="badge">价格 <b>¥5.89</b></span>
+    <span class="badge">类型 <b>桌面基础款（四则运算为主）</b></span>
+    <span class="badge">接口 <b>无</b></span>
+  </div>
+</header>
+
+<!-- ============ 1 ============ -->
+<section>
+  <h2><span class="n">01</span>先认清现实：它为什么连不上电脑</h2>
+  <p class="lead">不是"没找到方法"，而是物理上就没有这条通道。</p>
+  <div class="grid3">
+    <div class="card hot">
+      <span class="ico">🔌</span>
+      <h3>没有对外接口</h3>
+      <p>没有 USB、串口、红外、蓝牙，连调试引脚都没引出。它的芯片是黑胶封装的定制 ASIC，程序出厂就烧死在掩膜 ROM 里，不存在"刷固件"。</p>
+    </div>
+    <div class="card">
+      <span class="ico">🧠</span>
+      <h3>但它真的是一台计算机</h3>
+      <p>主控（常见 4 位核）+ 键盘扫描 + 运算 + 显示驱动 + 电源管理，全在一颗芯片里。教科书上"计算机五大部件"，它占全了。</p>
+    </div>
+    <div class="card">
+      <span class="ico">🧠</span>
+      <h3>所以"连接"只剩硬件这条路</h3>
+      <p>把键盘矩阵、显示段线引出来接单片机，或者用摄像头/舵机在外面做"物理外挂"。两种都能做，成本 0～30 元。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section>
+  <h2><span class="n">02</span>它内部到底怎么算的</h2>
+  <p class="lead">拆开来看，从按键到屏幕就一条流水线：</p>
+  <div class="flow">
+    <div class="node">按键矩阵<small>4~6 行 × 5~8 列</small></div>
+    <span class="arrow">→</span>
+    <div class="node">扫描电路<small>逐行拉低、读列</small></div>
+    <span class="arrow">→</span>
+    <div class="node acc">4 位 CPU<small>掩膜 ROM 状态机</small></div>
+    <span class="arrow">→</span>
+    <div class="node">BCD 运算<small>十进制加减 + 移位</small></div>
+    <span class="arrow">→</span>
+    <div class="node">LCD 驱动<small>1/4 duty 多路复用</small></div>
+    <span class="arrow">→</span>
+    <div class="node">段码屏<small>TN + 斑马条</small></div>
+  </div>
+  <div class="card">
+    <ul class="facts">
+      <li><b>键盘不是 30 根线。</b>它是矩阵：芯片一行一行地"点名"，哪一列有回应，就知道你按了哪个键。30 个键，十几根线搞定。</li>
+      <li><b>用 BCD 而不是二进制浮点。</b>它按十进制一位一位地存、一位一位地算。这就是为什么它 <code>0.1+0.2</code> 老老实实显示 <span class="hl">0.3</span>，而电脑会给你 <code>0.30000000000000004</code>。</li>
+      <li><b>显示位数 ≠ 内部位数。</b>便宜的机器内部也常多留 1～2 位"保护位"，所以 <code>1÷3×3</code> 常常能回到 <span class="hl">1</span>——这是电脑浮点做不到的小魔法。</li>
+      <li><b>时钟低到你不信。</b>很多计算器主频只有几十 kHz（常见 32.768 kHz 那档），因为省电是第一优先级。</li>
+      <li><b>LCD 必须用交流驱动。</b>直流会电解坏液晶，所以段线是"翻转的方波"，这也是为什么用万用表直接量它永远是诡异电压。</li>
+      <li><b>供电是太阳能板 + 一颗纽扣电池。</b>光够就晒太阳，光不够就抠电池——你拆开能看到那块小板子。</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section>
+  <h2><span class="n">03</span>14 种玩法，按"折腾程度"排</h2>
+  <p class="lead">点标签筛选。<b>不带 ★</b> 的今天就能玩，<b>带 ★</b> 的才需要烙铁和一点点勇气。</p>
+  <div class="chips" id="chips"></div>
+  <div class="plays" id="plays"></div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section>
+  <h2><span class="n">04</span>计算器拼词器（0 元，现在就能玩）</h2>
+  <p class="lead">七段数字倒过来就是字母。输入一个单词，它告诉你该按哪些数字，再把计算器倒过来读。</p>
+  <div class="panel">
+    <div class="field">
+      <input type="text" id="word" maxlength="14" placeholder="输入英文单词，比如 hello / leo" autocomplete="off">
+      <button class="btn" id="spellBtn">生成</button>
+    </div>
+    <div class="ex" id="examples"></div>
+    <div class="out" id="spellOut" hidden>
+      <div class="display" id="digits"></div>
+      <div class="flip" id="flip"></div>
+    </div>
+    <div class="maptable" id="maptable"></div>
+  </div>
+</section>
+
+<!-- ============ 5 ============ -->
+<section>
+  <h2><span class="n">05</span>精度侦探：反推你这台机器</h2>
+  <p class="lead">拿起计算器照着做，把看到的结果选出来。全部答完，我给你一份"机器画像"。</p>
+  <div class="quiz" id="quiz"></div>
+  <div class="field" style="margin-top:18px">
+    <button class="btn" id="judgeBtn">揭晓画像</button>
+    <button class="btn ghost" id="resetBtn">重做</button>
+  </div>
+  <div class="out" id="verdict" hidden></div>
+</section>
+
+<!-- ============ 6 ============ -->
+<section>
+  <h2><span class="n">06</span>真要"连电脑"：四条路线</h2>
+  <p class="lead">按你想让电脑扮演的角色来选。<b>A</b>=电脑控制计算器，<b>B</b>=计算器给电脑送数据，<b>C</b>=它变成电脑的键盘，<b>D</b>=完全不拆机。</p>
+
+  <div class="route">
+    <h3>路线 A · 让电脑帮你按（电脑 → 计算器）<span class="lv">推荐 · 约 20 元 · 要烙铁</span></h3>
+    <p class="lead" style="margin:6px 0 0">核心洞察：<b>按下按键 = 把某条行线和某条列线短接一下</b>。所以不用碰它原来的芯片，用两个模拟开关"假装"这个短接就行，计算器本身还能正常用。</p>
+    <ol>
+      <li>拆机，拍照。用万用表蜂鸣档找出行线/列线：按住一个键，响的那两个焊盘就是它的行和列。30 个键测完，画成表（这就是全部秘密）。</li>
+      <li>准备 2 片 <code>74HC4051</code>（8 通道模拟开关）。所有行线接第一片的 8 个通道，公共端 COM 接第二片的 COM；所有列线接第二片的通道。模拟开关是双向的，COM↔通道就是一根可断开的导线。</li>
+      <li>单片机用 3 位地址选行 + 3 位地址选列，再把两片的 INH 拉低 → 行列短接 → 芯片认为你按下了那个键。</li>
+      <li>先不接计算器，用万用表确认选通时电阻约几十到一百多欧，断开时无穷大。</li>
+      <li>接上后，计算器电池照装，MCU 发一串按键：<code>1</code> <code>+</code> <code>1</code> <code>=</code> —— 它会自己算。</li>
+      <li>再加个 ESP32 或串口，电脑上就能 <code>curl</code> 它：<code>GET /calc?keys=12%2B34%3D</code>。</li>
+    </ol>
+    <div class="warn">⚠️ 用 3.3V 给模拟开关供电（别用 5V 硬灌计算器的 1.5~3V 线路）；两片 4051 的地址线不能同时选中多路。</div>
+    <div class="note">这条路线最优雅：不破坏原功能，纯"并联"上去。适合做成视频/作品。</div>
+  </div>
+
+  <div class="route">
+    <h3>路线 B · 让电脑读懂它（计算器 → 电脑）<span class="lv">0～20 元 · 不用烙铁</span></h3>
+    <p class="lead" style="margin:6px 0 0">两个思路，差一个数量级的难度：</p>
+    <ol>
+      <li><b>摄像头读屏（最省事）：</b>手机/电脑摄像头对准屏幕，OpenCV 裁出显示区、二值化、按七段结构逐段判亮暗。比通用 OCR 准得多，因为你知道它是七段码。</li>
+      <li><b>逻辑分析仪抓键盘（硬核但更准）：</b>20 块钱的 8 通道 USB 逻辑分析仪夹在行列线上，抓扫描波形——哪一行在脉冲、哪一列同时被拉低，就能还原你按的每个键。等于给它装了个键盘记录器。</li>
+      <li><b>抓 LCD 段线（最硬核）：</b>解码 1/4 duty 的多路复用波形，直接读出屏幕内容。原理简单但调试痛苦，不建议新手。</li>
+    </ol>
+    <div class="note">B + A 组合起来，就是完整的"电脑操作计算器、再读回结果"闭环。</div>
+  </div>
+
+  <div class="route">
+    <h3>路线 C · 它变成你的 USB 小键盘<span class="lv">约 20 元 · 要烙铁 · 会废掉计算功能</span></h3>
+    <p class="lead" style="margin:6px 0 0">反转思路：我要的不是计算器，是它那 30 个手感不错的键。</p>
+    <ol>
+      <li>拆开，找到键盘矩阵接到芯片的那组线（一般 4~6 行 + 5~8 列）。</li>
+      <li>断开原芯片的供电（割断一根细走线，或拆掉芯片）——否则它也在扫描，会和你的 MCU 打架。</li>
+      <li>MCU 接管矩阵：行线输出、列线上拉输入，逐行扫描、5ms 去抖。</li>
+      <li>烧成 USB HID：<code>Pro Micro</code>（Arduino <code>Keyboard</code> 库最省事）或 <code>RP2040-Zero</code>（CircuitPython / KMK 固件）。</li>
+      <li>想做"层"也行：按住 <code>×</code> 切到第二层，30 个键变 60 个快捷键。</li>
+    </ol>
+    <div class="warn">⚠️ 这一步不可逆（除非加个拨动开关在"原芯片/MCU"之间切换——想两用就加开关）。</div>
+  </div>
+
+  <div class="route">
+    <h3>路线 D · 纯外挂：舵机机械臂 + 摄像头<span class="lv">约 30 元 · 零破坏</span></h3>
+    <p class="lead" style="margin:6px 0 0">不拆机、不焊接，纯物理：两个 SG90 舵机 + 一根"手指"（3D 打印或硬纸板）按键，摄像头读屏。看起来最蠢，但闭环最完整，也最适合拍成视频。</p>
+    <div class="note">唯一缺点：慢。按一个键 0.5 秒，但你会在调试中彻底理解"矩阵扫描"为什么存在。</div>
+  </div>
+</section>
+
+<!-- ============ 7 ============ -->
+<section>
+  <h2><span class="n">07</span>购物清单（真的想动手再看）</h2>
+  <div class="panel">
+    <table>
+      <thead><tr><th>东西</th><th>用途</th><th>大概价格</th></tr></thead>
+      <tbody>
+        <tr><td>74HC4051 × 2</td><td>路线 A 的模拟开关</td><td>1～2 元</td></tr>
+        <tr><td>RP2040-Zero / Pro Micro</td><td>路线 A、C 的主控</td><td>15～20 元</td></tr>
+        <tr><td>8 通道 USB 逻辑分析仪</td><td>路线 B 抓扫描波形</td><td>20 元左右</td></tr>
+        <tr><td>万用表（蜂鸣档）</td><td>找行列、测通断</td><td>20 元左右</td></tr>
+        <tr><td>电烙铁 + 焊锡 + 漆包线</td><td>飞线</td><td>30 元起</td></tr>
+        <tr><td>SG90 舵机 × 2</td><td>路线 D</td><td>10 元</td></tr>
+        <tr><td>彩色偏振片</td><td>LCD 反色/彩色改造</td><td>5 元/张</td></tr>
+        <tr><td>5V LED 灯带（可剪）</td><td>加背光</td><td>5 元</td></tr>
+      </tbody>
+    </table>
+    <p class="lead" style="margin:14px 0 0">总额取决于你已有多少工具。如果只有一台 5.89 元的计算器，<b>0 元</b>也能玩 01～07 号玩法。</p>
+  </div>
+</section>
+
+<!-- ============ 8 ============ -->
+<section class="safety">
+  <h2><span class="n">08</span>拆之前，先记住这几条</h2>
+  <ul>
+    <li><b>斑马条是脆弱的。</b>LCD 和 PCB 之间那截黑色导电橡胶，装回时务必对准、压平，偏一点就整片缺段。拆的时候记住方向。</li>
+    <li><b>不要用 5V 直接灌它的电路。</b>它是 1.5～3V 系统，芯片 IO 没有 5V 容忍。</li>
+    <li><b>纽扣电池别短路。</b>镊子横跨正负极会烫手。</li>
+    <li><b>太阳能板别上烙铁。</b>一烫就裂。</li>
+    <li><b>静电。</b>摸一下金属再接板子，尤其干燥季节。</li>
+    <li><b>拆了不保修。</b>——不过它 5.89 元，这个风险几乎可以忽略。</li>
+  </ul>
+</section>
+
+<footer>
+  DD-5202 计算器实验室 · 单文件离线页，随便改、随便存。<br>
+  下一步：告诉我想走哪条路线、手里有什么工具，我把它做成你能直接照做的东西（接线图 / 固件 / 探测表）。
+</footer>
+
+</div>
+
+<script>
+/* ================= 玩法卡片 ================= */
+const PLAYS = [
+  {t:'倒着拼词', c:'0 元', tg:['零成本'], tm:'5 分钟',
+   d:'输入 0.7734，把计算器倒过来——就是 hELLO。七段数字转 180° 后像字母，这是最便宜的计算器艺术。',
+   tip:'映射：0=O 1=I 2=Z 3=E 4=h 5=S 6=g 7=L 8=B 9=G。下面的拼词器能生成你的名字。'},
+  {t:'精度侦探', c:'0 元', tg:['零成本'], tm:'10 分钟',
+   d:'做几个除法和小数运算，反推它显示几位、内部留几位保护位、是四舍五入还是直接截断。',
+   tip:'页面第 05 节的问答会自动帮你判。'},
+  {t:'142857 魔术', c:'0 元', tg:['零成本'], tm:'3 分钟',
+   d:'1÷7、2÷7……6÷7 是同一串数字 142857 的轮转。12 位屏能一口气看到循环节。',
+   tip:'再试 1÷13、1÷17，看它会不会乖乖显示整个循环节。'},
+  {t:'连按等号 / 常数模式', c:'0 元', tg:['零成本'], tm:'2 分钟',
+   d:'2+3= 之后连按 =，看它是不是每次 +3；有些机器连按两次运算符会进入"常数计算"。',
+   tip:'不同芯片行为不同，这本身就能看出它用的是哪类方案。'},
+  {t:'% 键的真相', c:'0 元', tg:['零成本'], tm:'2 分钟',
+   d:'100+10%= 到底是 110 还是 100.1？便宜计算器的百分号语义五花八门。',
+   tip:'这个结果直接暴露固件里"百分比"是怎么实现的。'},
+  {t:'把它算崩', c:'0 元', tg:['零成本'], tm:'5 分钟',
+   d:'1÷0、疯狂开方、连按一堆键——看它显示 E 还是软死机。死机就抠电池复位。',
+   tip:'不会真坏，坏了也是 5.89 元。'},
+  {t:'拆开看标本', c:'0 元', tg:['拆机'], tm:'15 分钟',
+   d:'几颗螺丝后盖，里面是黑胶封装的 COB 芯片、导电橡胶按键、一段斑马条连着段码 LCD。',
+   tip:'拍张照发我，我帮你认芯片和行列走线。'},
+  {t:'LCD 反色 / 透明改造', c:'10 元', tg:['拆机','硬核'], tm:'40 分钟',
+   d:'把 LCD 前的偏振片转 90° 装回 → 黑底白字；换彩色偏振片 → 彩色屏幕。',
+   tip:'TN 屏可视角会变差，属正常现象。'},
+  {t:'塞个背光进去', c:'15 元', tg:['拆机','硬核'], tm:'1 小时',
+   d:'把 5V LED 灯带裁短塞到 LCD 后面，串限流电阻，从电池盒取电。',
+   tip:'注意厚度，别顶裂 LCD。'},
+  {t:'键盘矩阵探测', c:'0 元', tg:['拆机'], tm:'30 分钟',
+   d:'万用表蜂鸣档，按住一个键测通的两点——那就是它的行和列。30 个键测完，整张矩阵表就到手了。',
+   tip:'这是后面所有改造的地基，值得认真做。'},
+  {t:'电脑帮你按 ★', c:'20 元', tg:['焊接','硬核'], tm:'2 小时',
+   d:'两片 74HC4051 模拟开关，让 MCU 把任意"行-列"短接 = 模拟一次按键。计算器还能照常用。',
+   tip:'于是电脑可以远程让它算 1+1，甚至写个 /calc 接口。'},
+  {t:'它变成 USB 小键盘 ★', c:'20 元', tg:['焊接','硬核'], tm:'2 小时',
+   d:'断开原芯片电源，MCU 接管键盘矩阵，把这台计算器的按键变成电脑的快捷键和宏。',
+   tip:'RP2040-Zero 或 Pro Micro，一小时能点亮。'},
+  {t:'摄像头读屏', c:'0 元', tg:['软件','零成本'], tm:'1 小时',
+   d:'OpenCV 切出屏幕区域，按七段结构逐段判亮暗，比通用 OCR 准得多。电脑就"看"到结果了。',
+   tip:'和"电脑帮你按"组合，就是完整闭环。'},
+  {t:'舵机机械臂', c:'30 元', tg:['硬核','软件'], tm:'3 小时',
+   d:'不拆机：两个舵机加一根"手指"按键盘，摄像头读屏，纯外部外挂。',
+   tip:'最无损，也最适合拍视频。'}
+];
+
+const chipsEl = document.getElementById('chips');
+const playsEl = document.getElementById('plays');
+const FILTERS = ['全部','零成本','拆机','焊接','软件','硬核'];
+
+FILTERS.forEach((f,i)=>{
+  const b = document.createElement('button');
+  b.className = 'chip' + (i===0 ? ' on' : '');
+  b.textContent = f;
+  b.onclick = ()=>{
+    document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+    b.classList.add('on');
+    document.querySelectorAll('.play').forEach(card=>{
+      const tags = card.dataset.tags.split('|');
+      card.classList.toggle('hide', f!=='全部' && !tags.includes(f));
+    });
+  };
+  chipsEl.appendChild(b);
+});
+
+PLAYS.forEach(p=>{
+  const el = document.createElement('article');
+  el.className = 'play';
+  el.dataset.tags = p.tg.join('|');
+  el.innerHTML = `
+    <div class="phead"><h3>${p.t}</h3><span class="cost">${p.c}</span></div>
+    <p>${p.d}</p>
+    <p class="tip">💡 ${p.tip}</p>
+    <div class="meta">
+      ${p.tg.map(t=>`<span class="tag" data-tag="${t}">${t}</span>`).join('')}
+      <span class="time">⏱ ${p.tm}</span>
+    </div>`;
+  playsEl.appendChild(el);
+});
+
+/* ================= 拼词器 ================= */
+const MAP = {o:0, i:1, z:2, e:3, h:4, s:5, g:6, l:7, b:8};
+const MAP_DISPLAY = [[0,'O'],[1,'I'],[2,'Z'],[3,'E'],[4,'h'],[5,'S'],[6,'g'],[7,'L'],[8,'B'],[9,'G']];
+
+const maptable = document.getElementById('maptable');
+MAP_DISPLAY.forEach(([d,l])=>{
+  const s = document.createElement('span');
+  s.innerHTML = `${d} = <b>${l}</b>`;
+  maptable.appendChild(s);
+});
+
+const wordEl = document.getElementById('word');
+const spellOut = document.getElementById('spellOut');
+const digitsEl = document.getElementById('digits');
+const flipEl = document.getElementById('flip');
+
+function spell(){
+  const raw = wordEl.value.trim().toLowerCase().replace(/[^a-z]/g,'');
+  if(!raw){ spellOut.hidden = true; return; }
+  const bad = [];
+  const rev = [...raw].reverse().map(ch=>{
+    if(ch in MAP) return MAP[ch];
+    bad.push(ch);
+    return '?';
+  });
+  const digitStr = rev.join('');
+  // 小数点插在第一位数字后面：数字序列不变，倒过来读才正好是单词
+  const shown = digitStr.length > 1 && digitStr[0] !== '?'
+    ? digitStr[0] + '.' + digitStr.slice(1)
+    : digitStr;
+  digitsEl.textContent = shown;
+  flipEl.innerHTML = '倒过来读（小数点只是个小点，不影响字母）：' +
+    (bad.length ? `<span style="color:#f2cc60">字母 ${[...new Set(bad)].join('、')} 拼不出来（用 ? 占位），换几个字母试试</span>`
+                : '<b style="color:#7ee787">' + raw.toUpperCase() + '</b>');
+  spellOut.hidden = false;
+}
+
+document.getElementById('spellBtn').onclick = spell;
+wordEl.addEventListener('keydown', e=>{ if(e.key==='Enter') spell(); });
+
+['hELLO','LEO','hI','gLOSS','SHELL OIL'].forEach(w=>{
+  const b = document.createElement('button');
+  b.textContent = w;
+  b.onclick = ()=>{ wordEl.value = w; spell(); };
+  document.getElementById('examples').appendChild(b);
+});
+
+/* ================= 精度侦探 ================= */
+const TESTS = [
+  {id:'digits', q:'1 ÷ 3 =', opts:[
+    ['8','0.33333333（8 位小数）'],
+    ['10','0.3333333333（10 位）'],
+    ['12','0.333333333333（12 位）']]},
+  {id:'round', q:'2 ÷ 3 =', opts:[
+    ['up','末位是 7（…6667，四舍五入）'],
+    ['down','末位是 6（…6666，直接截断）']]},
+  {id:'guard', q:'1 ÷ 3 × 3 =', opts:[
+    ['1','正好等于 1'],
+    ['0999','0.99999999…（少了一点点）']]},
+  {id:'err', q:'1 ÷ 0 =', opts:[
+    ['e','显示 E'],
+    ['err','显示 Error / Err'],
+    ['zero','显示 0 或没反应']]},
+  {id:'pct', q:'100 + 10% =', opts:[
+    ['110','110'],
+    ['1001','100.1'],
+    ['other','其他 / 报错']]},
+  {id:'sqrt', q:'√2 =', opts:[
+    ['7','1.4142136（7 位小数）'],
+    ['9','1.414213562（9 位）'],
+    ['11','1.41421356237（11 位）'],
+    ['other','其他位数']]},
+  {id:'repeat', q:'2 + 3 = 之后连按两次 =', opts:[
+    ['add3','5、8、11（每次 +3）'],
+    ['res','5、11、17（累加上次结果）'],
+    ['other','其他 / 没反应']]},
+  {id:'neg', q:'5 − 9 =', opts:[
+    ['neg','-4'],
+    ['pos','显示 4 或 E（不支持负数）']]}
+];
+
+const quizEl = document.getElementById('quiz');
+TESTS.forEach((t,idx)=>{
+  const fs = document.createElement('fieldset');
+  fs.innerHTML = `<legend><code>${t.q}</code></legend>` +
+    t.opts.map(([v,label],i)=>`
+      <label class="opt">
+        <input type="radio" name="q${idx}" value="${v}">
+        <span>${label}</span>
+      </label>`).join('');
+  quizEl.appendChild(fs);
+});
+
+document.getElementById('judgeBtn').onclick = ()=>{
+  const got = {};
+  TESTS.forEach((t,idx)=>{
+    const el = document.querySelector(`input[name="q${idx}"]:checked`);
+    if(el) got[t.id] = el.value;
+  });
+  const missing = TESTS.length - Object.keys(got).length;
+  if(missing > 0){
+    document.getElementById('verdict').hidden = false;
+    document.getElementById('verdict').innerHTML =
+      `<p style="color:#f2cc60;margin:0">还有 ${missing} 项没答，先去计算器上按一遍吧。</p>`;
+    return;
+  }
+  const lines = [];
+  const D = {8:'8 位', 10:'10 位', 12:'12 位'};
+  if(got.digits) lines.push(`<b>显示宽度</b>：${D[got.digits] || got.digits} —— 这决定了它的"屏幕精度"。`);
+  if(got.round === 'up') lines.push(`<b>舍入方式</b>：四舍五入（末位会进位），属于比较"体面"的实现。`);
+  if(got.round === 'down') lines.push(`<b>舍入方式</b>：直接截断（末位不进位），成本更低的老式做法。`);
+  if(got.guard === '1') lines.push(`<b>保护位</b>：有。内部比显示多留了位数，所以 <code>1÷3×3</code> 能回到 1。`);
+  if(got.guard === '0999') lines.push(`<b>保护位</b>：没有（或很少）。<code>1÷3×3</code> 差一点点 —— 说明它显示多少位就算多少位。`);
+  if(got.err) lines.push(`<b>错误提示</b>：${got.err === 'e' ? '单字母 E' : got.err === 'err' ? '完整 Error' : '几乎不报错'}，能看出固件年代感。`);
+  if(got.pct === '110') lines.push(`<b>百分号</b>：把 % 当成"对前一个数取百分比"，所以 <code>100+10%</code> 变成 <code>100+100×10%</code> = 110。`);
+  if(got.pct === '1001') lines.push(`<b>百分号</b>：把 % 当成简单的"除以 100"，所以 <code>100+10%</code> = 100.1。`);
+  if(got.sqrt) lines.push(`<b>开方精度</b>：${got.sqrt === 'other' ? '位数不典型' : '√2 显示 ' + got.sqrt + ' 位小数'}，是内部算法位数的直接证据。`);
+  if(got.repeat === 'add3') lines.push(`<b>重复运算</b>：连按 = 重复"最后一次运算"，这是最经典的实现。`);
+  if(got.repeat === 'res') lines.push(`<b>重复运算</b>：连按 = 不断累加上次结果，属于另一种流派。`);
+  if(got.neg) lines.push(`<b>负数</b>：${got.neg === 'neg' ? '支持（有符号运算）' : '不支持（结果截断或直接报错）'}。`);
+
+  document.getElementById('verdict').hidden = false;
+  document.getElementById('verdict').innerHTML =
+    `<p style="margin:0 0 10px;color:#7ee787;font-weight:600">你的 DD-5202 画像</p>
+     <ul style="margin:0;padding-left:20px;color:#c8d3de;font-size:14.5px">
+       ${lines.map(x=>`<li style="margin:6px 0">${x}</li>`).join('')}
+     </ul>
+     <p style="margin:12px 0 0;color:#8fa0ae;font-size:13px">
+       记住：这些数据就是它的"指纹"。同款换个批次可能就变，所以测出来的也算你自己的实验记录。
+     </p>`;
+  document.getElementById('verdict').scrollIntoView({behavior:'smooth', block:'nearest'});
+};
+
+document.getElementById('resetBtn').onclick = ()=>{
+  document.querySelectorAll('#quiz input[type=radio]').forEach(i=>i.checked=false);
+  document.getElementById('verdict').hidden = true;
+};
+</script>
+<a href="index.html" style="position:fixed;left:16px;bottom:16px;z-index:9999;background:#121a24;border:1px solid #24323f;color:#7ee787;border-radius:999px;padding:7px 15px;font-size:13px;text-decoration:none;font-family:Segoe UI,Microsoft YaHei,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.4)">← 自动化小站</a>
+</body>
+</html>

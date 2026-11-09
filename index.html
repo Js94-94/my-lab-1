@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>自动化小站 · 机械 × 代码</title>
+<style>
+  *{box-sizing:border-box}
+  :root{
+    --bg:#0a0e13; --panel:#121a24; --panel2:#0e151d; --line:#24323f;
+    --text:#e6edf3; --dim:#8fa0ae; --acc:#7ee787; --cyan:#79c0ff; --warn:#f2cc60;
+  }
+  html{scroll-behavior:smooth}
+  body{margin:0; color:var(--text); line-height:1.75;
+    background:radial-gradient(1100px 560px at 15% -10%,#16222e 0%,#0a0e13 58%) fixed;
+    font-family:"Segoe UI","Microsoft YaHei",system-ui,-apple-system,sans-serif}
+  .wrap{max-width:920px; margin:0 auto; padding:0 22px 90px}
+  nav{display:flex; flex-wrap:wrap; gap:14px; align-items:center; justify-content:space-between;
+    padding:20px 0; border-bottom:1px solid var(--line)}
+  .brand{font-weight:700; letter-spacing:.06em}
+  nav .links{display:flex; flex-wrap:wrap; gap:16px; font-size:13.5px}
+  nav a{color:var(--dim); text-decoration:none}
+  nav a:hover{color:var(--acc)}
+  header.hero{padding:56px 0 34px}
+  .kicker{color:var(--acc); font-size:12.5px; letter-spacing:.22em; text-transform:uppercase}
+  h1{margin:10px 0 12px; font-size:clamp(28px,5vw,46px); line-height:1.22}
+  h1 span{color:var(--acc)}
+  .hero p{color:var(--dim); max-width:640px; margin:0}
+  .tags{margin-top:18px; display:flex; flex-wrap:wrap; gap:8px}
+  .tags span{border:1px solid var(--line); background:var(--panel); border-radius:999px;
+    padding:3px 12px; font-size:12.5px; color:var(--dim)}
+  section{padding:34px 0; border-top:1px solid var(--line)}
+  h2{font-size:22px; margin:0 0 16px}
+  .cards{display:grid; gap:14px; grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+  .card{display:block; background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:20px; text-decoration:none; color:inherit; transition:.15s}
+  .card:hover{border-color:#3a5a44; transform:translateY(-2px)}
+  .card .ico{font-size:26px; margin-bottom:8px}
+  .card h3{margin:0 0 6px; font-size:17px; color:var(--text)}
+  .card p{margin:0; font-size:14px; color:var(--dim)}
+  .card .go{display:inline-block; margin-top:12px; font-size:13px; color:var(--acc)}
+  table{width:100%; border-collapse:collapse; font-size:14px; margin:6px 0 18px}
+  th,td{text-align:left; padding:9px 10px; border-bottom:1px solid var(--line); vertical-align:top}
+  th{color:var(--dim); font-size:13px; font-weight:600}
+  td:last-child,th:last-child{text-align:right; white-space:nowrap; font-family:ui-monospace,Consolas,monospace; color:var(--dim)}
+  .plan{display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+  .day{background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:14px 16px}
+  .day b{color:var(--acc); font-size:13px}
+  .day p{margin:4px 0 0; font-size:13.5px; color:var(--dim)}
+  ul.tl{list-style:none; margin:0; padding:0}
+  ul.tl li{position:relative; padding:0 0 16px 22px; border-left:1px dashed #2b3a49; margin-left:6px}
+  ul.tl li:last-child{border-left-color:transparent}
+  ul.tl li::before{content:""; position:absolute; left:-5px; top:8px; width:9px; height:9px;
+    border-radius:50%; background:var(--acc)}
+  ul.tl b{color:var(--text); font-family:ui-monospace,Consolas,monospace; font-size:13px; margin-right:10px}
+  ul.tl span{color:var(--dim); font-size:14px}
+  footer{padding-top:24px; border-top:1px solid var(--line); color:var(--dim); font-size:13px}
+  footer a{color:var(--cyan); text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <nav>
+    <span class="brand">自动化小站</span>
+    <span class="links">
+      <a href="lab.html">计算器实验室</a>
+      <a href="gadgets.html">小玩意清单</a>
+      <a href="#week1">第一周计划</a>
+      <a href="https://github.com/Js94-94/my-lab-1" target="_blank" rel="noopener">GitHub</a>
+    </span>
+  </nav>
+
+  <header class="hero">
+    <div class="kicker">Mechanical Design → Automation</div>
+    <h1>把一个想法，做成<span>能跑的东西</span></h1>
+    <p>机械设计制造及其自动化 · 大二。课余时间做硬件小项目，这里只放过程：拆过什么、买了什么、踩过什么坑。</p>
+    <div class="tags">
+      <span>ESP32</span><span>舵机 / 步进</span><span>传感器</span>
+      <span>闭环控制</span><span>机器视觉</span><span>机械结构</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>项目记录</h2>
+    <div class="cards">
+      <a class="card" href="lab.html">
+        <div class="ico">🔧</div>
+        <h3>计算器实验室</h3>
+        <p>拆掉一台 5.89 元的 DD-5202：它怎么算、怎么省电、怎么显示，以及「连上电脑」到底要动哪里。</p>
+        <span class="go">打开 →</span>
+      </a>
+      <a class="card" href="gadgets.html">
+        <div class="ico">🤖</div>
+        <h3>自动化小玩意清单</h3>
+        <p>22 个能改造生活的小项目，加一份分阶段的装备清单，按「能不能闭环」筛过一遍。</p>
+        <span class="go">打开 →</span>
+      </a>
+      <a class="card" href="#week1">
+        <div class="ico">🧰</div>
+        <h3>第一周：128 元的开始</h3>
+        <p>ESP32 + 面包板 + 舵机 + 传感器，四天从点灯走到「手机网页控制舵机」，全程不用电烙铁。</p>
+        <span class="go">看计划 →</span>
+      </a>
+    </div>
+  </section>
+
+  <section id="week1">
+    <h2>第一周装备（约 ¥128）</h2>
+    <table>
+      <thead><tr><th>东西</th><th>规格</th><th>价格</th></tr></thead>
+      <tbody>
+        <tr><td>ESP32 开发板</td><td>WROOM-32 DevKit，Type-C，排针焊好</td><td>¥25</td></tr>
+        <tr><td>面包板 + 杜邦线</td><td>830 孔 + 公对公/公对母/母对母各 40 根</td><td>¥22</td></tr>
+        <tr><td>SG90 舵机 ×2</td><td>9g 舵机</td><td>¥16</td></tr>
+        <tr><td>传感器小包</td><td>HC-SR04、HC-SR501、光敏、DHT11、LED + 电阻</td><td>¥25</td></tr>
+        <tr><td>5V 2A 电源 + 数据线</td><td>注意：要「数据线」，不是充电线</td><td>¥20</td></tr>
+        <tr><td>USB 逻辑分析仪</td><td>8 通道 24MHz</td><td>¥20</td></tr>
+      </tbody>
+    </table>
+    <div class="plan">
+      <div class="day"><b>第 1 天</b><p>装 IDE，点亮板载 LED，再接一个外接 LED</p></div>
+      <div class="day"><b>第 2 天</b><p>SG90 舵机转到指定角度（PWM）</p></div>
+      <div class="day"><b>第 3 天</b><p>手机浏览器打开 ESP32 网页，点按钮转舵机</p></div>
+      <div class="day"><b>第 4 天</b><p>DHT11 温湿度显示在网页上</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>时间线</h2>
+    <ul class="tl">
+      <li><b>2026-11-08</b><span>拆开 DD-5202，搞清楚键盘矩阵、段码屏和那颗黑胶芯片</span></li>
+      <li><b>2026-11-09</b><span>建站：把拆机笔记、装备清单和小玩意项目搬上来</span></li>
+      <li><b>下一步</b><span>下单第一批装备，点亮第一个 LED；然后做「人走灯灭」</span></li>
+    </ul>
+  </section>
+
+  <footer>
+    用 GitHub Pages 托管 · <a href="https://github.com/Js94-94/my-lab-1">仓库源码</a><br>
+    记录会一直更新；每个项目都留接线、BOM 和踩坑过程。
+  </footer>
+
+</div>
+</body>
+</html>
